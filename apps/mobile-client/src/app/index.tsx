@@ -16,13 +16,13 @@ export default function HomeScreen() {
       {isLoading && <ActivityIndicator size={"large"} color={"#0000ff"} />}
       {health && (
         <View>
-          <Text>Status: {health.status}</Text>
-          <Text>Timestamp: {health.timestamp}</Text>
+          <Text>Status: {health?.status}</Text>
+          <Text>Timestamp: {health?.timestamp}</Text>
         </View>
       )}
       {error && (
         <View>
-          <Text>Error: {error.message}</Text>
+          <Text>Error: {error?.message}</Text>
         </View>
       )}
 
