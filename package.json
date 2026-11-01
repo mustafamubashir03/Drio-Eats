@@ -1,0 +1,28 @@
+{
+  "name": "drio-eats",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev:server": "pnpm --filter server run start:dev",
+    "dev:mobile": "pnpm --filter mobile-client run start",
+    "dev": "concurrently \"pnpm dev:server\" \"pnpm dev:mobile\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.16.1",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.16.1",
+  "type": "module",
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
