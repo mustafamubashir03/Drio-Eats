@@ -1,8 +1,11 @@
 # DRIO Eats
 
-DRIO Eats is a multi-role food delivery platform with four user experiences: Customer, Restaurant Owner, Driver, and Admin/Superadmin. It consists of an Expo (React Native) mobile client and a NestJS backend using Neon PostgreSQL via Drizzle ORM, with Better Auth for authentication and a custom RBAC layer.
+DRIO Eats is a multi-role food delivery platform with four user experiences: Customer,
+Restaurant Owner, Driver, and Admin/Superadmin. It consists of an Expo (React Native)
+mobile client and a NestJS backend using Neon PostgreSQL via Drizzle ORM, with Better
+Auth for authentication and a custom RBAC layer.
 
-## Tech stack (actual)
+## Tech Stack
 
 - Mobile: Expo SDK 58, Expo Router 58, React 19.3, React Native 0.88, TypeScript 6
 - Backend: NestJS 12, Node, TypeScript 6, Drizzle ORM 1.0.0-rc.5, Neon serverless driver
@@ -11,81 +14,49 @@ DRIO Eats is a multi-role food delivery platform with four user experiences: Cus
 - DB: Neon PostgreSQL
 - Shared: `@drio-eats/types`
 
-## Repository structure
+## Repository Structure
 
 ```
 drio-eats/
 ├── apps/
 │   ├── mobile-client/   # Expo app (src/app routes, src/components, src/lib, src/screens)
-│   └── server/          # NestJS app (src/modules, db/schema, rbac)
-├── packages/types/      # Shared TS types/enums
-├── AGENTS.md            # Repo-wide agent rules
-└── apps/mobile-client/AGENTS.md
+│   └── server/          # NestJS app (src/auth, src/rbac, src/db)
+├── packages/types/      # Shared TypeScript types/enums
+├── documentation.md     # Full system design & architecture
+└── README.md
 ```
 
 ## Architecture
 
-```mermaid
-flowchart LR
-  Mobile[Expo Mobile Client] -->|REST /api| Server[NestJS API]
-  Server --> DB[(Neon PostgreSQL)]
-  Server --> Auth[Better Auth]
-  Mobile -->|SecureStore/localStorage| Session[Session token]
+```
+Mobile (Expo)  --REST /api-->  NestJS API  -->  Neon PostgreSQL
+                                    |
+                                    +--> Better Auth (session/Bearer)
 ```
 
-## Authentication and RBAC startup flow
+## Development Setup
 
-```mermaid
-flowchart TD
-  Start[App start] --> Hydrate[AuthProvider hydrates session]
-  Hydrate -->|no session| Login[Login screen]
-  Hydrate -->|session| Fetch[GET /api/rbac/me/roles]
-  Fetch --> Ready[authorizationReady]
-  Ready --> RoleHome{roleHome}
-  RoleHome -->|superadmin| Admin[/(admin)/users]
-  RoleHome -->|owner approved| Owner[/(owner)]
-  RoleHome -->|driver approved| Driver[/(driver)]
-  RoleHome -->|else| Customer[/(customer)]
-```
+1. Install: `pnpm install`
+2. Backend env: `apps/server/.env`
+3. Mobile env: `apps/mobile-client/.env`
+4. DB migrate: `cd apps/server && pnpm db:push`
+5. Start backend: `cd apps/server && pnpm start:dev`
+6. Start mobile: `cd apps/mobile-client && pnpm start`
 
-## Database
+## Verification
 
-Drizzle ORM with schema in `apps/server/src/db/schema`. Migrations via `drizzle-kit` (`pnpm db:push/pull/studio`). Key entities: users, user_roles, permissions, role_permissions, driver_applications, restaurant_owner_applications, restaurants, menus, orders, deliveries, audit_logs.
-
-```mermaid
-erDiagram
-  USERS ||--o{ USER_ROLES : has
-  USER_ROLES }o--|| PERMISSIONS : via
-  USERS ||--o{ DRIVER_APPLICATIONS : submits
-  USERS ||--o{ RESTAURANT_OWNER_APPLICATIONS : submits
-  USERS ||--o{ RESTAURANTS : owns
-  RESTAURANTS ||--o{ MENUS : has
-  ORDERS ||--o{ DELIVERIES : creates
-```
-
-## Development setup
-
-- Install: `pnpm install`
-- Backend env: `apps/server/.env` (DATABASE_URL, BETTER_AUTH_SECRET, etc.)
-- DB migrate: `cd apps/server; pnpm db:push`
-- Start backend: `cd apps/server; pnpm start` (or `pnpm start:dev`)
-- Start mobile: `cd apps/mobile-client; pnpm start` (Expo Go) or `pnpm web`
+- Server tests: `cd apps/server && pnpm test`
 - Typecheck: `pnpm exec tsc --noEmit` (in each app)
 - Lint: `pnpm run lint`
-- Tests: `cd apps/server; pnpm test`
 - Mobile export: `pnpm exec expo export --platform web`
 
-API URL: mobile uses `EXPO_PUBLIC_API_URL` in prod; in dev web uses localhost:3000, native uses Metro host.
+## Documentation
 
-## Testing and verification
+See `documentation.md` for the complete system design, RBAC, navigation, and API details.
 
-- Server: 99 unit tests pass (vitest). Integration/acceptance tests may require DB.
-- Mobile: TypeScript pass; lint 0 errors.
-- Runtime verification of auth/role flows requires Expo Go/device (not performed here).
+## Known Limitations
 
-## Known limitations
-
-- Zod/Zustand/Redis declared in project rules but not implemented (class-validator + React Context used).
+- Zod/Zustand/Redis declared in project rules but not implemented.
 - Real-time/Socket.IO not implemented.
 - Many business screens use static/mock data.
 - Android runtime not verified in this environment.
