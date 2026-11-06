@@ -1,50 +1,36 @@
-import { api } from "@/lib/axios";
-import { useQuery } from "@tanstack/react-query"
-import { HealthCheckResponse } from "@drio-eats/types"
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { router } from "expo-router";
+import { useAuth } from "@/lib/auth";
+import { useTheme } from "@/lib/theme";
 
-export default function HomeScreen() {
-  const { data: health, isLoading, error } = useQuery<HealthCheckResponse>({
-    queryKey: ['health'],
-    queryFn: () => api.get('/health').then((res) => res.data)
-  })
-  if (isLoading) return <View style={styles.container}><ActivityIndicator size="large" color="#0000ff" /></View>
-  return (
-    <View>
-      <Text>Food Delivery</Text>
-      <Text>Connection Text</Text>
-      {isLoading && <ActivityIndicator size={"large"} color={"#0000ff"} />}
-      {health && (
-        <View>
-          <Text>Status: {health?.status}</Text>
-          <Text>Timestamp: {health?.timestamp}</Text>
-        </View>
-      )}
-      {error && (
-        <View>
-          <Text>Error: {error?.message}</Text>
-        </View>
-      )}
-
-    </View>
-  )
+function roleHome(authorization: { roles?: string[]; isSuperAdmin?: boolean; driverApplicationStatus?: string | null; restaurantOwnerApplicationStatus?: string | null } | null) {
+  if (!authorization) return "/(customer)";
+  if (authorization.isSuperAdmin) return "/(admin)/users";
+  const roles = authorization.roles ?? [];
+  if (roles.includes("RESTAURANT_OWNER") && authorization.restaurantOwnerApplicationStatus === "APPROVED") return "/(owner)";
+  if (roles.includes("DRIVER") && authorization.driverApplicationStatus === "APPROVED") return "/(driver)";
+  return "/(customer)";
 }
 
+export default function Index() {
+  const { ready, isAuthenticated, authorization, authorizationReady } = useAuth();
+  const { colors } = useTheme();
+
+  useEffect(() => {
+    if (!ready) return;
+    if (!isAuthenticated) { router.replace("/(auth)/login" as never); return; }
+    if (!authorizationReady) return;
+    router.replace(roleHome(authorization) as never);
+  }, [ready, isAuthenticated, authorizationReady, authorization]);
+
+  return (
+    <View style={[styles.loader, { backgroundColor: colors.background }]}>
+      <ActivityIndicator size="large" color={colors.lime} />
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  }
+  loader: { flex: 1, alignItems: "center", justifyContent: "center" },
 });
-
-
-

@@ -1,7 +1,7 @@
 export enum UserRole {
     CUSTOMER = "CUSTOMER",
     RESTAURANT_OWNER = "RESTAURANT_OWNER",
-    DELIVER = "DELIVER",
+    DRIVER = "DRIVER",
 }
 
 export interface User {
@@ -16,4 +16,10 @@ export interface User {
 export interface HealthCheckResponse {
     status: string;
     timestamp: number;
+}
+
+export interface JwtPayload {
+    sub: string
+    email: string
+    role: string
 }

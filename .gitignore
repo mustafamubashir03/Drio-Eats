@@ -59,3 +59,16 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # AI agent config
 .claude/
+
+# Local temporary artifacts
+*.out
+*.err
+*.bak
+*.bak2
+*.tmp
+.backup/
+.web-test/
+customer-signup.json
+driver-signup.json
+owner-signup.json
+seed-test-data.sql

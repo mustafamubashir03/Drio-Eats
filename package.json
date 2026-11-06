@@ -25,5 +25,8 @@
   "type": "module",
   "devDependencies": {
     "concurrently": "^10.0.6"
+  },
+  "dependencies": {
+    "@thallesp/nestjs-better-auth": "2.8.0"
   }
 }
