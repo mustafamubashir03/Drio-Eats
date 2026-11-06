@@ -2,6 +2,7 @@ import React, { ReactNode } from "react";
 import {
   Image,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -36,14 +37,6 @@ interface AuthScaffoldProps {
 
 /**
  * Auth presentation scaffold.
- *
- * Layout, top to bottom:
- *   1. full-bleed hero image (~40% of the viewport) with a baked-in dark mask,
- *   2. the DRIO EATS wordmark over the masked image,
- *   3. a tagline, the form, and (on short forms) the primary action in flow,
- *   4. the theme toggle floating over the hero, top-right.
- *
- * Auth state and requests live in the screens; this file is presentation only.
  */
 export function AuthScaffold({
   tagline,
@@ -62,16 +55,11 @@ export function AuthScaffold({
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
-  // 40% of the viewport, clamped so it stays a hero on very short/large screens.
-  // Screens shorter than 600px give a few pixels back so the primary action
-  // still lands above the fold instead of being clipped by the system nav.
   const heroRatio = height < 600 ? 0.36 : 0.4;
   const heroHeight = Math.round(
     Math.min(390, Math.max(200, height * heroRatio))
   );
   const compact = height < 700;
-  // Pinned only when the form itself is known to overflow (signup). The login
-  // form fits at 320x568 with the CTA in flow, directly under the last field.
   const shouldPin = pinPrimary;
 
   const errorBlock = error ? (
@@ -94,7 +82,10 @@ export function AuthScaffold({
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={["left", "right"]} style={styles.flex}>
-        <KeyboardAvoidingView style={styles.flex} behavior="padding">
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
           <ScrollView
             style={styles.flex}
             contentContainerStyle={styles.content}
@@ -102,7 +93,7 @@ export function AuthScaffold({
             keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.heroContainer}>
+            <View style={[styles.heroContainer, { height: heroHeight }]}>
               <Image
                 source={HERO_IMAGE}
                 style={styles.heroBackground}
@@ -140,44 +131,61 @@ export function AuthScaffold({
                 </View>
               </View>
             </View>
+
+            <View
+              style={[
+                styles.body,
+                compact && styles.bodyCompact,
+                {
+                  paddingBottom: shouldPin
+                    ? Math.max(insets.bottom, 24) + 88
+                    : Math.max(insets.bottom, 24),
+                },
+              ]}
+            >
+              <Text style={[styles.tagline, { color: colors.text }]}>
+                {tagline}
+              </Text>
+
+              {children}
+
+              {!shouldPin ? (
+                <>
+                  {errorBlock}
+                  <View style={styles.inlineCta}>{primaryButton}</View>
+                </>
+              ) : (
+                errorBlock
+              )}
+
+              <View style={styles.footerLinkRow}>
+                <Text variant="bodySmall" color="textMuted">
+                  {footerText}{" "}
+                </Text>
+                <Pressable
+                  onPress={onFooterPress}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={footerAction}
+                >
+                  <Text variant="label" color="lime" weight="700">
+                    {footerAction}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
           </ScrollView>
 
-          <View
-            style={[
-              styles.body,
-              compact && styles.bodyCompact,
-              !shouldPin && { paddingBottom: Math.max(insets.bottom, 24) },
-            ]}
-          >
-            <Text style={[styles.tagline, { color: colors.text }]}>
-              {tagline}
-            </Text>
-
-            {children}
-
-            {!shouldPin ? (
-              <>
-                {errorBlock}
-                <View style={styles.inlineCta}>{primaryButton}</View>
-              </>
-            ) : null}
-
-            <View style={styles.footerLinkRow}>
-              <Text variant="bodySmall" color="textMuted">
-                {footerText}{" "}
-              </Text>
-              <Pressable
-                onPress={onFooterPress}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={footerAction}
-              >
-                <Text variant="label" color="lime" weight="700">
-                  {footerAction}
-                </Text>
-              </Pressable>
+          {shouldPin ? (
+            <View
+              style={[
+                styles.pinnedCta,
+                { paddingBottom: Math.max(insets.bottom, 12) },
+              ]}
+            >
+              {primaryButton}
             </View>
-          </View>
+          ) : null}
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
@@ -275,5 +283,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 16,
+  },
+  pinnedCta: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    backgroundColor: "transparent",
   },
 });
